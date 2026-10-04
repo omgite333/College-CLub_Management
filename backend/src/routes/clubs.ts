@@ -111,7 +111,7 @@ router.patch("/:id", requireAuth, async (req: Request, res: Response, next: Next
 
     const allowed =
       req.user!.role === "SUPER_ADMIN" ||
-      (await isClubAdmin(req.user!.id, clubId, req.user!.role));
+      (await isClubAdmin(req.user!.id, clubId));
     if (!allowed) throw createError(403, "You are not an admin of this club");
 
     if (data.name && data.name !== club.name) {
@@ -137,7 +137,7 @@ router.post("/:id/members", requireAuth, async (req: Request, res: Response, nex
 
     const callerIsSuper = req.user!.role === "SUPER_ADMIN";
     const callerIsClubAdmin =
-      !callerIsSuper && (await isClubAdmin(req.user!.id, clubId, req.user!.role));
+      !callerIsSuper && (await isClubAdmin(req.user!.id, clubId));
 
     if (!callerIsSuper && !callerIsClubAdmin) {
       throw createError(403, "You are not an admin of this club");
@@ -186,7 +186,7 @@ router.delete("/:id/members/:membershipId", requireAuth, async (req: Request, re
 
     const callerIsSuper = req.user!.role === "SUPER_ADMIN";
     const callerIsClubAdmin =
-      !callerIsSuper && (await isClubAdmin(req.user!.id, clubId, req.user!.role));
+      !callerIsSuper && (await isClubAdmin(req.user!.id, clubId));
 
     if (!callerIsSuper && !callerIsClubAdmin) {
       throw createError(403, "You are not an admin of this club");

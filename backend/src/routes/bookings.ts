@@ -87,10 +87,10 @@ router.post("/", requireAuth, async (req: Request, res: Response, next: NextFunc
   try {
     const data = createBookingSchema.parse(req.body);
 
-    const canBook =
-      req.user!.role === "SUPER_ADMIN" ||
-      (await isClubAdmin(req.user!.id, data.clubId, req.user!.role));
-    if (!canBook) throw createError(403, "You are not an admin of this club");
+    // Bookings belong to the club that holds the room; SUPER_ADMIN does not own bookings.
+    if (!(await isClubAdmin(req.user!.id, data.clubId))) {
+      throw createError(403, "Only this club's admins can create bookings");
+    }
 
     validateTimes(data.startTime, data.endTime);
 
@@ -139,10 +139,9 @@ router.patch("/:id", requireAuth, async (req: Request, res: Response, next: Next
     const booking = await prisma.booking.findUnique({ where: { id: req.params.id } });
     if (!booking) throw createError(404, "Booking not found");
 
-    const canEdit =
-      req.user!.role === "SUPER_ADMIN" ||
-      (await isClubAdmin(req.user!.id, booking.clubId, req.user!.role));
-    if (!canEdit) throw createError(403, "You are not an admin of this club");
+    if (!(await isClubAdmin(req.user!.id, booking.clubId))) {
+      throw createError(403, "Only this club's admins can edit this booking");
+    }
 
     const newStart = data.startTime ?? booking.startTime;
     const newEnd = data.endTime ?? booking.endTime;
@@ -191,10 +190,9 @@ router.delete("/:id", requireAuth, async (req: Request, res: Response, next: Nex
     const booking = await prisma.booking.findUnique({ where: { id: req.params.id } });
     if (!booking) throw createError(404, "Booking not found");
 
-    const canCancel =
-      req.user!.role === "SUPER_ADMIN" ||
-      (await isClubAdmin(req.user!.id, booking.clubId, req.user!.role));
-    if (!canCancel) throw createError(403, "You are not an admin of this club");
+    if (!(await isClubAdmin(req.user!.id, booking.clubId))) {
+      throw createError(403, "Only this club's admins can cancel this booking");
+    }
 
     const cancelled = await prisma.booking.update({
       where: { id: booking.id },

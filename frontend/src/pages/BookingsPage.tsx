@@ -51,15 +51,16 @@ export default function BookingsPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const isSuperAdmin = user?.role === "SUPER_ADMIN";
   const adminClubIds = useMemo(
     () => new Set(user?.memberships.filter((m) => m.role === "CLUB_ADMIN").map((m) => m.clubId) ?? []),
     [user]
   );
 
-  const canEditBooking = (b: Booking) => isSuperAdmin || adminClubIds.has(b.club.id);
-  const canCreate = isSuperAdmin || adminClubIds.size > 0;
-  const creatableClubs = clubs.filter((c) => isSuperAdmin || adminClubIds.has(c.id));
+  // Bookings belong to clubs; SUPER_ADMIN manages access and does not own bookings.
+  const canEditBooking = (b: Booking) => adminClubIds.has(b.club.id);
+  const canCreate = adminClubIds.size > 0;
+  const creatableClubs = clubs.filter((c) => adminClubIds.has(c.id));
+  const isStudent = user?.role === "STUDENT";
 
   const load = () => {
     setError(null);
@@ -238,7 +239,8 @@ export default function BookingsPage() {
                 <div>
                   <p className="text-sm font-bold text-ink">{b.title}</p>
                   <p className="mt-0.5 text-xs text-muted">
-                    {b.club.name} · {b.classroom.building} — {b.classroom.name} · by {b.bookedBy.name}
+                    {b.club.name} · {b.classroom.building} — {b.classroom.name}
+                    {!isStudent && ` · by ${b.bookedBy.name}`}
                   </p>
                   {b.purpose && <p className="mt-1 text-sm text-bodytext">{b.purpose}</p>}
                   <p className="mt-1 text-xs font-semibold text-ink">

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { listBookings, listClassrooms } from "../lib/api";
+import { useAuth } from "../auth/AuthContext";
 import type { Booking, Classroom } from "../types";
 import { Alert, Badge, EmptyState, Spinner, btnSecondary, clubHex, formatDate, formatTime, inputClass } from "../components/ui";
 
@@ -56,7 +57,9 @@ const OCCUPIED_STROKE = "#dc2626";
 const ACCENT = "#12808C";
 
 function BookingRow({ booking }: { booking: Booking }) {
+  const { user } = useAuth();
   const color = clubHex(booking.club.id);
+  const isStudent = user?.role === "STUDENT";
   return (
     <li className="rounded-xl border border-slate-100 bg-slate-50 p-3">
       <div className="flex items-center justify-between gap-2">
@@ -70,12 +73,14 @@ function BookingRow({ booking }: { booking: Booking }) {
       </div>
       <p className="mt-1 text-sm font-medium text-ink">{booking.title}</p>
       {booking.purpose && <p className="text-sm text-muted">{booking.purpose}</p>}
-      <p className="mt-1 text-xs text-muted">Booked by {booking.bookedBy.name}</p>
+      {!isStudent && <p className="mt-1 text-xs text-muted">Booked by {booking.bookedBy.name}</p>}
     </li>
   );
 }
 
 export default function MapPage() {
+  const { user } = useAuth();
+  const isStudent = user?.role === "STUDENT";
   const [rooms, setRooms] = useState<Classroom[] | null>(null);
   const [dateKey, setDateKey] = useState(() => toKey(new Date()));
   const [dayBookings, setDayBookings] = useState<Booking[]>([]);
@@ -382,6 +387,7 @@ export default function MapPage() {
                         </ul>
                       )}
                     </div>
+                    {!isStudent && (
                     <div>
                       <h3 className="mb-2 text-sm font-bold text-ink">
                         Past bookings ({pastBookings.length})
@@ -396,6 +402,7 @@ export default function MapPage() {
                         </ul>
                       )}
                     </div>
+                  )}
                   </>
                 )}
 

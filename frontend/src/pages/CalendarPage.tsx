@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { listBookings, listClassrooms } from "../lib/api";
+import { useAuth } from "../auth/AuthContext";
 import type { Booking, Classroom } from "../types";
 import { Alert, EmptyState, Field, Spinner, btnSecondary, clubHex, formatTime, inputClass } from "../components/ui";
 
@@ -22,6 +23,8 @@ function monthGrid(date: Date): Date[] {
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 export default function CalendarPage() {
+  const { user } = useAuth();
+  const isStudent = user?.role === "STUDENT";
   const [viewDate, setViewDate] = useState(() => new Date());
   const [selectedKey, setSelectedKey] = useState(() => dayKey(new Date()));
   const [roomFilter, setRoomFilter] = useState("");
@@ -216,7 +219,7 @@ export default function CalendarPage() {
                     </p>
                     <p className="mt-0.5 text-sm text-bodytext">{b.title}</p>
                     {b.purpose && <p className="text-xs text-muted">{b.purpose}</p>}
-                    <p className="mt-1 text-xs text-muted">Booked by {b.bookedBy.name}</p>
+                    {!isStudent && <p className="mt-1 text-xs text-muted">Booked by {b.bookedBy.name}</p>}
                   </li>
                 ))}
               </ul>

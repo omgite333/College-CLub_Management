@@ -118,7 +118,8 @@ export default function DashboardPage() {
   );
 
   const firstName = user?.name?.split(" ")[0] ?? "there";
-  const canBook = user?.role === "CLUB_ADMIN" || user?.role === "SUPER_ADMIN";
+  // Booking rights come from holding a CLUB_ADMIN membership, not the account role.
+  const canBook = user?.memberships.some((m) => m.role === "CLUB_ADMIN") === true;
 
   return (
     <div className="space-y-5">
