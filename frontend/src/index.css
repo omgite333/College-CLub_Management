@@ -1,0 +1,47 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap");
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #03111b;
+  --color-canvas: #f2f2f2;
+  --color-mist: #a7c6cb;
+  --color-deep: #1e3c4d;
+  --color-accent: #12808c;
+  --color-muted: #99afb4;
+  --color-bodytext: #5c5655;
+  --color-plum: #825376;
+  --font-sans: "Poppins", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-bodytext);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer components {
+  /* Floating white card: no border, soft diffuse shadow, 18px radius */
+  .card {
+    background: #ffffff;
+    border-radius: 18px;
+    box-shadow: 0 12px 32px rgba(3, 17, 27, 0.07);
+  }
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #c9d8db;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #a7c6cb;
+}
