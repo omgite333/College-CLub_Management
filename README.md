@@ -72,3 +72,16 @@ college-club-mgmt/
 ```
 
 See `backend/README.md` and `frontend/README.md` for more detail on each side.
+
+## Run with Docker Compose
+
+Docker Compose builds and runs the frontend and backend. The backend uses the configured PostgreSQL database (for example, Neon); it runs `prisma migrate deploy` at startup.
+
+1. Create a root `.env` file and set `DATABASE_URL` to your PostgreSQL connection string and `JWT_SECRET` to a long random value.
+2. Start both services:
+
+```bash
+docker compose up --build
+```
+
+Open the frontend at `http://localhost:8080`. The API is available at `http://localhost:5000/api`. To seed demo data, run `docker compose exec backend npx prisma db seed`.
