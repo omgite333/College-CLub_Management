@@ -10,6 +10,13 @@ import type {
 } from "../types";
 
 const BASE = import.meta.env.VITE_API_URL ?? "http://localhost:5000/api";
+const GET_CACHE_TTL_MS = 15_000;
+const getCache = new Map<string, { expiresAt: number; data: unknown }>();
+const pendingGets = new Map<string, Promise<unknown>>();
+
+export function clearApiCache(): void {
+  getCache.clear();
+}
 
 export function getToken(): string | null {
   return localStorage.getItem("ccm_token");
@@ -22,24 +29,54 @@ interface ApiOptions {
 }
 
 export async function apiFetch<T>(path: string, opts: ApiOptions = {}): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, {
-    method: opts.method ?? "GET",
-    headers: {
-      "Content-Type": "application/json",
-      ...(opts.token ? { Authorization: `Bearer ${opts.token}` } : {}),
-    },
-    ...(opts.body !== undefined ? { body: JSON.stringify(opts.body) } : {}),
-  });
+  const method = opts.method ?? "GET";
+  const url = `${BASE}${path}`;
+  const cacheKey = `${opts.token ?? "anonymous"}:${url}`;
 
-  const data: unknown = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    const msg =
-      typeof data === "object" && data !== null && "error" in data && typeof (data as { error: unknown }).error === "string"
-        ? (data as { error: string }).error
-        : `Request failed (${res.status})`;
-    throw new Error(msg);
+  if (method === "GET") {
+    const cached = getCache.get(cacheKey);
+    if (cached && cached.expiresAt > Date.now()) return cached.data as T;
+    if (cached) getCache.delete(cacheKey);
+
+    const pending = pendingGets.get(cacheKey);
+    if (pending) return pending as Promise<T>;
   }
-  return data as T;
+
+  const request = (async () => {
+    const res = await fetch(url, {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        ...(opts.token ? { Authorization: `Bearer ${opts.token}` } : {}),
+      },
+      ...(opts.body !== undefined ? { body: JSON.stringify(opts.body) } : {}),
+    });
+
+    const data: unknown = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const msg =
+        typeof data === "object" && data !== null && "error" in data && typeof (data as { error: unknown }).error === "string"
+          ? (data as { error: string }).error
+          : `Request failed (${res.status})`;
+      throw new Error(msg);
+    }
+
+    if (method === "GET") {
+      getCache.set(cacheKey, { expiresAt: Date.now() + GET_CACHE_TTL_MS, data });
+    } else {
+      clearApiCache();
+    }
+    return data;
+  })();
+
+  if (method !== "GET") return (await request) as T;
+
+  pendingGets.set(cacheKey, request);
+  try {
+    return (await request) as T;
+  } finally {
+    if (pendingGets.get(cacheKey) === request) pendingGets.delete(cacheKey);
+  }
 }
 
 function authed<T>(path: string, opts: ApiOptions = {}): Promise<T> {

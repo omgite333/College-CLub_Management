@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { getMe, getToken, login as apiLogin, register as apiRegister } from "../lib/api";
+import { clearApiCache, getMe, getToken, login as apiLogin, register as apiRegister } from "../lib/api";
 import type { User } from "../types";
 
 interface AuthContextValue {
@@ -40,6 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     const { token: t, user: u } = await apiLogin(email, password);
+    clearApiCache();
     localStorage.setItem("ccm_token", t);
     setToken(t);
     setUser(u);
@@ -47,12 +48,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = useCallback(async (name: string, email: string, password: string) => {
     const { token: t, user: u } = await apiRegister(name, email, password);
+    clearApiCache();
     localStorage.setItem("ccm_token", t);
     setToken(t);
     setUser(u);
   }, []);
 
   const logout = useCallback(() => {
+    clearApiCache();
     localStorage.removeItem("ccm_token");
     setToken(null);
     setUser(null);
