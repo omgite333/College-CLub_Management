@@ -84,4 +84,4 @@ Docker Compose builds and runs the frontend and backend. The backend uses the Po
 docker compose up --build
 ```
 
-Point your host reverse proxy for `clubhub.omgite.me` to `http://127.0.0.1:8080`. The API is available through `https://clubhub.omgite.me/api`. To seed demo data, run `docker compose exec backend npx prisma db seed`.
+Point your host reverse proxy for `clubhub.omgite.me` to `http://127.0.0.1:5173`. The API is available through `https://clubhub.omgite.me/api`. To seed demo data, run `docker compose exec backend npx prisma db seed`.
