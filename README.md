@@ -75,13 +75,13 @@ See `backend/README.md` and `frontend/README.md` for more detail on each side.
 
 ## Run with Docker Compose
 
-Docker Compose builds and runs the frontend and backend. The backend uses the configured PostgreSQL database (for example, Neon); it runs `prisma migrate deploy` at startup.
+Docker Compose builds and runs the frontend and backend. The backend uses the PostgreSQL database configured in `backend/.env` and runs `prisma migrate deploy` at startup. Nginx serves the frontend and proxies `/api` requests to the backend, so the browser uses the same origin for both.
 
-1. Create a root `.env` file and set `DATABASE_URL` to your PostgreSQL connection string and `JWT_SECRET` to a long random value.
+1. Create `backend/.env` from `backend/.env.example`, then set `DATABASE_URL`, `JWT_SECRET`, and `FRONTEND_URL=https://clubhub.omgite.me`.
 2. Start both services:
 
 ```bash
 docker compose up --build
 ```
 
-Open the frontend at `http://localhost:8080`. The API is available at `http://localhost:5000/api`. To seed demo data, run `docker compose exec backend npx prisma db seed`.
+Point your host reverse proxy for `clubhub.omgite.me` to `http://127.0.0.1:8080`. The API is available through `https://clubhub.omgite.me/api`. To seed demo data, run `docker compose exec backend npx prisma db seed`.
