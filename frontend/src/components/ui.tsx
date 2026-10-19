@@ -12,7 +12,7 @@ export function Spinner() {
 
 export function EmptyState({ title, hint }: { title: string; hint?: string }) {
   return (
-    <div className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center">
+    <div className="rounded-xl border border-dashed border-line bg-surface px-6 py-10 text-center">
       <p className="text-sm font-medium text-bodytext">{title}</p>
       {hint && <p className="mt-1 text-sm text-muted">{hint}</p>}
     </div>
@@ -20,19 +20,19 @@ export function EmptyState({ title, hint }: { title: string; hint?: string }) {
 }
 
 const badgeColors: Record<string, string> = {
-  STUDENT: "bg-slate-100 text-bodytext",
+  STUDENT: "bg-slate-100 text-bodytext dark:bg-white/10",
   CLUB_ADMIN: "bg-accent/10 text-accent",
   SUPER_ADMIN: "bg-plum/10 text-plum",
   CONFIRMED: "bg-accent/10 text-accent",
-  CANCELLED: "bg-slate-100 text-muted",
-  FREE: "bg-emerald-100 text-emerald-700",
-  AVAILABLE: "bg-emerald-100 text-emerald-700",
-  BOOKED: "bg-amber-100 text-amber-700",
-  OCCUPIED: "bg-red-100 text-red-700",
+  CANCELLED: "bg-slate-100 text-muted dark:bg-white/10",
+  FREE: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300",
+  AVAILABLE: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300",
+  BOOKED: "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300",
+  OCCUPIED: "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300",
 };
 
 export function Badge({ text }: { text: string }) {
-  const color = badgeColors[text] ?? "bg-slate-100 text-bodytext";
+  const color = badgeColors[text] ?? "bg-slate-100 text-bodytext dark:bg-white/10";
   return (
     <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${color}`}>
       {text.replace(/_/g, " ")}
@@ -55,11 +55,11 @@ export function Modal({ title, onClose, children }: { title: string; onClose: ()
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <button aria-label="Close" className="absolute inset-0 bg-ink/40" onClick={onClose} />
-      <div className="relative w-full max-w-lg rounded-[20px] bg-white p-6 shadow-xl">
+      <button aria-label="Close" className="absolute inset-0 bg-abyss/60" onClick={onClose} />
+      <div className="relative w-full max-w-lg rounded-[20px] bg-surface p-6 shadow-xl">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-ink">{title}</h2>
-          <button onClick={onClose} className="rounded-md p-1 text-muted hover:bg-slate-100 hover:text-bodytext">
+          <button onClick={onClose} className="rounded-md p-1 text-muted hover:bg-slate-100 hover:text-bodytext dark:hover:bg-white/10">
             ✕
           </button>
         </div>
@@ -79,16 +79,16 @@ export function Field({ label, children }: { label: string; children: ReactNode 
 }
 
 export const inputClass =
-  "w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-ink placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20";
+  "w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm text-ink placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20";
 
 export const btnPrimary =
-  "inline-flex items-center justify-center rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#0e6d77] disabled:opacity-50";
+  "inline-flex items-center justify-center rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#0e6d77] dark:hover:bg-[#35c3d1] disabled:opacity-50";
 
 export const btnSecondary =
-  "inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-bodytext hover:bg-slate-50 disabled:opacity-50";
+  "inline-flex items-center justify-center rounded-xl border border-line bg-surface px-4 py-2.5 text-sm font-semibold text-bodytext hover:bg-slate-50 dark:hover:bg-white/5 disabled:opacity-50";
 
 export const btnDanger =
-  "inline-flex items-center justify-center rounded-xl border border-red-200 bg-white px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50";
+  "inline-flex items-center justify-center rounded-xl border border-red-200 bg-surface px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 dark:border-red-500/30 dark:hover:bg-red-500/10 disabled:opacity-50";
 
 export function formatDateTime(iso: string): string {
   const d = new Date(iso);
@@ -105,7 +105,9 @@ export function formatDate(iso: string): string {
 
 export function Alert({ kind, message }: { kind: "error" | "success"; message: string }) {
   const styles =
-    kind === "error" ? "border-red-200 bg-red-50 text-red-700" : "border-emerald-200 bg-emerald-50 text-emerald-700";
+    kind === "error"
+      ? "border-red-200 bg-red-50 text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300"
+      : "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300";
   return <div className={`rounded-xl border px-4 py-3 text-sm ${styles}`}>{message}</div>;
 }
 

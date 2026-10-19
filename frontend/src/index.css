@@ -3,7 +3,10 @@
 
 @theme {
   --color-ink: #03111b;
+  --color-abyss: #081320;
   --color-canvas: #f2f2f2;
+  --color-surface: #ffffff;
+  --color-line: #e9eef1;
   --color-mist: #a7c6cb;
   --color-deep: #1e3c4d;
   --color-accent: #12808c;
@@ -11,6 +14,40 @@
   --color-bodytext: #5c5655;
   --color-plum: #825376;
   --font-sans: "Poppins", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* class-based dark mode: `dark:` variants respond to .dark on <html> */
+@custom-variant dark (&:where(.dark, .dark *));
+
+.dark {
+  --color-ink: #eef4f6;
+  --color-canvas: #0a111c;
+  --color-surface: #101b2c;
+  --color-line: #1d2a40;
+  --color-bodytext: #a9b8c9;
+  --color-muted: #7d8ea3;
+}
+
+/* Campus map fills, theme-aware */
+:root {
+  --map-free: #dcfce7;
+  --map-free-stroke: #16a34a;
+  --map-occ: #fee2e2;
+  --map-occ-stroke: #dc2626;
+  --map-shell: #ffffff;
+  --map-shell-stroke: #1e293b;
+  --map-label: #0f172a;
+  --map-bg: #f8fafc;
+}
+.dark {
+  --map-free: #0c2f1f;
+  --map-free-stroke: #34d399;
+  --map-occ: #3a1414;
+  --map-occ-stroke: #f87171;
+  --map-shell: #101b2c;
+  --map-shell-stroke: #33475f;
+  --map-label: #dbe7f3;
+  --map-bg: #0a111c;
 }
 
 @layer base {
@@ -23,11 +60,14 @@
 }
 
 @layer components {
-  /* Floating white card: no border, soft diffuse shadow, 18px radius */
+  /* Floating card: soft diffuse shadow, 18px radius; surface flips in dark mode */
   .card {
-    background: #ffffff;
+    background: var(--color-surface);
     border-radius: 18px;
     box-shadow: 0 12px 32px rgba(3, 17, 27, 0.07);
+  }
+  .dark .card {
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
   }
 }
 
@@ -44,4 +84,10 @@
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #a7c6cb;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #24344d;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #31445f;
 }

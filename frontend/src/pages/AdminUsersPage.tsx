@@ -93,7 +93,7 @@ export default function AdminUsersPage() {
         <div className="card overflow-x-auto">
           <table className="w-full min-w-[640px] text-sm">
             <thead>
-              <tr className="border-b border-slate-100 text-left text-xs font-semibold text-muted">
+              <tr className="border-b border-line text-left text-xs font-semibold text-muted">
                 <th className="px-5 py-3">Name</th>
                 <th className="px-5 py-3">Email</th>
                 <th className="px-5 py-3">Role</th>
@@ -103,7 +103,7 @@ export default function AdminUsersPage() {
             </thead>
             <tbody>
               {(users ?? []).map((u) => (
-                <tr key={u.id} className="border-b border-slate-100 last:border-0">
+                <tr key={u.id} className="border-b border-line last:border-0">
                   <td className="px-5 py-3 font-medium text-ink">{u.name}</td>
                   <td className="px-5 py-3 text-bodytext">{u.email}</td>
                   <td className="px-5 py-3">

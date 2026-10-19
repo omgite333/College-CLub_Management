@@ -54,6 +54,7 @@ export interface ClubBookingInfo {
 export interface ClubDetail {
   club: { id: string; name: string; description: string | null; logoUrl: string | null; createdAt: string };
   members: ClubMember[];
+  memberNames: { id: string; name: string; role: string | null }[];
   upcomingBookings: ClubBookingInfo[];
 }
 
@@ -91,4 +92,15 @@ export interface Booking {
   club: { id: string; name: string };
   classroom: { id: string; name: string; building: string };
   bookedBy: { id: string; name: string };
+}
+
+export interface ClubEvent {
+  id: string;
+  clubId: string;
+  title: string;
+  schedule: string | null;
+  date: string | null;
+  location: string | null;
+  createdAt: string;
+  club?: { id: string; name: string };
 }

@@ -12,61 +12,79 @@ const fromKey = (k: string) => {
   return new Date(y, m - 1, d);
 };
 
-// Building layout traced from the college sketch (courtyard block).
-// Coordinates are in SVG viewBox units (0 0 100 78).
-interface MapRoom {
-  name: string;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  lines: string[];
-}
+// Room type labels, e.g. SEMINAR_HALL -> Seminar Hall
+const prettyType = (t: string) =>
+  t.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 
-const MAP_ROOMS: MapRoom[] = [
-  // left wing
-  { name: "C-101", x: 9, y: 7, w: 16, h: 9, lines: ["C-101"] },
-  { name: "C-102", x: 9, y: 17, w: 16, h: 9, lines: ["C-102"] },
-  { name: "C-103", x: 9, y: 27, w: 16, h: 9, lines: ["C-103"] },
-  { name: "C-104", x: 9, y: 44, w: 16, h: 9, lines: ["C-104"] },
-  { name: "C-105", x: 9, y: 54, w: 16, h: 9, lines: ["C-105"] },
-  { name: "C-106", x: 9, y: 64, w: 16, h: 9, lines: ["C-106"] },
-  // right wing
-  { name: "C-201", x: 75, y: 7, w: 16, h: 9, lines: ["C-201"] },
-  { name: "C-202", x: 75, y: 17, w: 16, h: 9, lines: ["C-202"] },
-  { name: "C-203", x: 75, y: 27, w: 16, h: 9, lines: ["C-203"] },
-  { name: "C-204", x: 75, y: 44, w: 16, h: 9, lines: ["C-204"] },
-  { name: "C-205", x: 75, y: 54, w: 16, h: 9, lines: ["C-205"] },
-  { name: "C-206", x: 75, y: 64, w: 16, h: 9, lines: ["C-206"] },
-  // top wing
-  { name: "C-301", x: 31, y: 7, w: 10, h: 9, lines: ["C-301"] },
-  { name: "Sathe Hall", x: 42.5, y: 7, w: 15, h: 9, lines: ["Sathe", "Hall"] },
-  { name: "C-302", x: 59, y: 7, w: 10, h: 9, lines: ["C-302"] },
-  // center
-  { name: "Tilak Hall", x: 40, y: 24, w: 20, h: 13, lines: ["Tilak Hall"] },
-  // bottom wing
-  { name: "C-303", x: 31, y: 62, w: 10, h: 9, lines: ["C-303"] },
-  { name: "Open Theater", x: 42.5, y: 62, w: 15, h: 9, lines: ["Open", "Theater"] },
-  { name: "C-304", x: 59, y: 62, w: 10, h: 9, lines: ["C-304"] },
+const FREE_FILL = "var(--map-free)";
+const FREE_STROKE = "var(--map-free-stroke)";
+const OCCUPIED_FILL = "var(--map-occ)";
+const OCCUPIED_STROKE = "var(--map-occ-stroke)";
+const ACCENT = "#12808C";
+
+interface MapTileDef { x: number; y: number; w: number; h: number; short: string; fs: number }
+
+// Schematic campus map (SVG viewBox 0 0 100 82). Classrooms sit inside the
+// main-building rectangle; Tilak Hall, Open Air Theatre and all other
+// facilities are drawn as separate rectangles outside it.
+const MAP_BUILDINGS = [
+  { label: "Main Building", x: 2, y: 4, w: 66, h: 50 },
+  { label: "Library", x: 52, y: 60, w: 18, h: 16 },
 ];
 
-const FREE_FILL = "#dcfce7";
-const FREE_STROKE = "#16a34a";
-const OCCUPIED_FILL = "#fee2e2";
-const OCCUPIED_STROKE = "#dc2626";
-const ACCENT = "#12808C";
+const CX = [4.8, 13.6, 22.4, 31.2, 40.0, 48.8, 57.6];
+const CY = [12, 24, 36];
+const cls = (col: number, row: number, short: string): MapTileDef => ({
+  x: CX[col], y: CY[row], w: 7.6, h: 10, short, fs: 3.6,
+});
+
+const MAP_LAYOUT: Record<string, MapTileDef> = {
+  "Classroom 1": cls(0, 0, "1"),
+  "Classroom 2": cls(1, 0, "2"),
+  "Classroom 3": cls(2, 0, "3"),
+  "Classroom 5": cls(3, 0, "5"),
+  "Classroom 6": cls(4, 0, "6"),
+  "Classroom 7": cls(5, 0, "7"),
+  "Classroom 4": cls(6, 0, "4"),
+  "Classroom 8": cls(0, 1, "8"),
+  "Classroom 9": cls(1, 1, "9"),
+  "Classroom 10": cls(2, 1, "10"),
+  "Classroom 11": cls(3, 1, "11"),
+  "Classroom 12": cls(4, 1, "12"),
+  "Classroom 13": cls(5, 1, "13"),
+  "Classroom 14": cls(6, 1, "14"),
+  "Classroom 15": cls(0, 2, "15"),
+  "Classroom 16": cls(1, 2, "16"),
+  "Classroom 17": cls(2, 2, "17"),
+  "Classroom 18": cls(3, 2, "18"),
+  "Classroom 20": cls(4, 2, "20"),
+  "N2 Classroom": cls(5, 2, "N2"),
+  "Electronics PG Classroom": cls(6, 2, "PG"),
+  "Tilak Hall": { x: 72, y: 4, w: 26, h: 16, short: "Tilak Hall", fs: 3 },
+  "Sathe Hall": { x: 72, y: 24, w: 26, h: 12, short: "Sathe Hall", fs: 2.8 },
+  "OAT": { x: 2, y: 60, w: 30, h: 16, short: "Open Air Theatre", fs: 2.6 },
+  "CSE Seminar Hall": { x: 72, y: 40, w: 26, h: 6, short: "CSE Seminar Hall", fs: 2.2 },
+  "Mechanical Production Seminar Hall": { x: 72, y: 47, w: 26, h: 6, short: "Mech. Production", fs: 2.2 },
+  "Design Seminar Hall": { x: 72, y: 54, w: 26, h: 6, short: "Design Seminar", fs: 2.2 },
+  "Electrical Seminar Hall": { x: 72, y: 61, w: 26, h: 6, short: "Electrical Seminar", fs: 2.2 },
+  "Civil Seminar Hall": { x: 72, y: 68, w: 26, h: 6, short: "Civil Seminar", fs: 2.2 },
+  "Main CCF": { x: 34, y: 60, w: 16, h: 7, short: "Main CCF", fs: 2.2 },
+  "Mini CCF": { x: 34, y: 69, w: 16, h: 7, short: "Mini CCF", fs: 2.2 },
+  "Library Stairs Area": { x: 53, y: 65, w: 16, h: 5, short: "Stairs Area", fs: 2 },
+  "Study Rooms": { x: 53, y: 71, w: 16, h: 4.5, short: "Study Rooms", fs: 2 },
+};
 
 function BookingRow({ booking }: { booking: Booking }) {
   const { user } = useAuth();
   const color = clubHex(booking.club.id);
   const isStudent = user?.role === "STUDENT";
   return (
-    <li className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+    <li className="rounded-xl border border-line bg-canvas p-3">
       <div className="flex items-center justify-between gap-2">
         <p className="text-xs font-semibold text-ink">
           {formatDate(booking.startTime)} · {formatTime(booking.startTime)} – {formatTime(booking.endTime)}
         </p>
-        <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white px-2 py-0.5 text-xs font-medium text-bodytext shadow-sm">
+        <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-surface px-2 py-0.5 text-xs font-medium text-bodytext shadow-sm">
           <span className="inline-block h-2 w-2 rounded-full" style={{ background: color }} />
           {booking.club.name}
         </span>
@@ -244,87 +262,67 @@ export default function MapPage() {
         <Spinner />
       ) : (
         <div className="grid gap-4 lg:grid-cols-3">
-          {/* SVG map */}
+          {/* Campus map */}
           <div className="card p-4 lg:col-span-2">
-            <svg viewBox="0 0 100 78" className="w-full rounded-xl bg-slate-50" role="img" aria-label="College building map">
-              <defs>
-                <marker id="arrow" markerWidth="4" markerHeight="4" refX="3" refY="2" orient="auto">
-                  <path d="M0,0 L4,2 L0,4" fill="none" stroke="#64748b" strokeWidth="0.8" />
-                </marker>
-              </defs>
-
-              {/* building shell */}
-              <rect x="6" y="4" width="88" height="70" rx="2.5" fill="#ffffff" stroke="#1e293b" strokeWidth="1" />
-              {/* courtyard */}
-              <rect x="31" y="20" width="38" height="36" rx="1.5" fill="#f0fdf4" stroke="#bbf7d0" strokeWidth="0.6" />
-              <text x="50" y="54" textAnchor="middle" fontSize="2.6" fill="#86efac">courtyard</text>
-
-              {/* corridors */}
-              <rect x="27.5" y="6" width="3" height="32" fill="#e2e8f0" />
-              <rect x="27.5" y="44" width="3" height="28" fill="#e2e8f0" />
-              <rect x="69.5" y="6" width="3" height="32" fill="#e2e8f0" />
-              <rect x="69.5" y="44" width="3" height="28" fill="#e2e8f0" />
-
-              {/* main entry */}
-              <line x1="0.5" y1="41" x2="5.5" y2="41" stroke="#64748b" strokeWidth="0.8" markerEnd="url(#arrow)" />
-              <text x="1" y="38.6" fontSize="2.8" fill="#64748b">Main entry</text>
-
-              {/* corridor direction arrows */}
-              <line x1="29" y1="5" x2="29" y2="1.6" stroke="#94a3b8" strokeWidth="0.7" markerEnd="url(#arrow)" />
-              <line x1="71" y1="1.6" x2="71" y2="5" stroke="#94a3b8" strokeWidth="0.7" markerEnd="url(#arrow)" />
-              <line x1="29" y1="76.6" x2="29" y2="73.2" stroke="#94a3b8" strokeWidth="0.7" markerEnd="url(#arrow)" />
-              <line x1="71" y1="76.6" x2="71" y2="73.2" stroke="#94a3b8" strokeWidth="0.7" markerEnd="url(#arrow)" />
-
-              {/* rooms */}
-              {MAP_ROOMS.map((r) => {
+            <svg viewBox="0 0 100 82" className="w-full rounded-xl" style={{ background: "var(--map-bg)" }} role="img" aria-label="Campus map">
+              {MAP_BUILDINGS.map((b) => (
+                <g key={b.label}>
+                  <rect x={b.x} y={b.y} width={b.w} height={b.h} rx="2" style={{ fill: "var(--map-shell)", stroke: "var(--map-shell-stroke)" }} strokeWidth="1" />
+                  <text x={b.x + 2} y={b.y + 3.6} fontSize="3" fontWeight="700" style={{ fill: "var(--map-label)" }}>
+                    {b.label}
+                  </text>
+                </g>
+              ))}
+              {(rooms ?? []).map((r) => {
+                const t = MAP_LAYOUT[r.name];
+                if (!t) return null;
                 const booked = bookedNames.has(r.name);
                 const live = liveByName.has(r.name);
                 const isSel = r.name === selectedName;
-                const cx = r.x + r.w / 2;
                 return (
-                  <g key={r.name}>
+                  <g key={r.id} onClick={() => setSelectedName(r.name)} style={{ cursor: "pointer" }}>
+                    <title>{`${r.name} (${prettyType(r.type)}) — ${live ? "in use now" : booked ? "booked" : "available"}`}</title>
                     <rect
-                      x={r.x}
-                      y={r.y}
-                      width={r.w}
-                      height={r.h}
-                      rx={1.2}
-                      fill={booked ? OCCUPIED_FILL : FREE_FILL}
+                      x={t.x} y={t.y} width={t.w} height={t.h} rx="1.5"
+                      fill={live || booked ? OCCUPIED_FILL : FREE_FILL}
                       stroke={isSel ? ACCENT : live ? "#b91c1c" : booked ? OCCUPIED_STROKE : FREE_STROKE}
-                      strokeWidth={isSel ? 1.6 : live ? 1.4 : 0.7}
-                      className="cursor-pointer"
-                      onClick={() => setSelectedName(r.name)}
+                      strokeWidth={isSel || live ? 1.6 : 0.8}
+                    />
+                    <text
+                      x={t.x + t.w / 2} y={t.y + t.h / 2 + t.fs * 0.35}
+                      textAnchor="middle" fontSize={t.fs} fontWeight="600" style={{ fill: "var(--map-label)" }} pointerEvents="none"
                     >
-                      <title>
-                        {r.name}
-                        {booked ? " — booked" : " — available"}
-                        {live ? " (in use now)" : ""}
-                      </title>
-                    </rect>
-                    {r.lines.map((line, i) => (
-                      <text
-                        key={i}
-                        x={cx}
-                        y={r.y + r.h / 2 + (i - (r.lines.length - 1) / 2) * 3.4 + 1.1}
-                        textAnchor="middle"
-                        fontSize={r.lines.length > 1 || line.length > 8 ? 2.7 : 3}
-                        fontWeight="600"
-                        fill="#0f172a"
-                        pointerEvents="none"
-                      >
-                        {line}
-                      </text>
-                    ))}
+                      {t.short}
+                    </text>
                   </g>
                 );
               })}
             </svg>
+            {rooms && rooms.filter((r) => !MAP_LAYOUT[r.name]).length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {rooms
+                  .filter((r) => !MAP_LAYOUT[r.name])
+                  .map((r) => (
+                    <button
+                      key={r.id}
+                      onClick={() => setSelectedName(r.name)}
+                      className={`rounded-lg border bg-surface px-3 py-1.5 text-xs font-medium text-ink ${
+                        r.name === selectedName
+                          ? "border-accent ring-2 ring-accent/25"
+                          : "border-line hover:border-accent/40"
+                      }`}
+                    >
+                      {r.name}
+                    </button>
+                  ))}
+              </div>
+            )}
           </div>
 
           {/* Side panel — all bookings for the selected room */}
           <div className="card p-5">
             {!selectedName ? (
-              <EmptyState title="Select a room" hint="Click any classroom or hall on the map to see all its bookings." />
+              <EmptyState title="Select a room" hint="Click any room to see all its bookings." />
             ) : !selectedRoom ? (
               <EmptyState title={selectedName} hint="This room is not registered in the system yet." />
             ) : (
@@ -333,14 +331,14 @@ export default function MapPage() {
                   <div>
                     <h2 className="text-lg font-bold text-ink">{selectedRoom.name}</h2>
                     <p className="text-sm text-muted">
-                      {selectedRoom.building} · {selectedRoom.capacity} seats
+                      {selectedRoom.building}{selectedRoom.capacity > 0 ? ` · ${selectedRoom.capacity} seats` : ""}
                     </p>
                   </div>
                   <Badge text={selectedBooked ? "BOOKED" : "AVAILABLE"} />
                 </div>
 
                 {currentBooking && (
-                  <div className="rounded-xl bg-red-50 p-3">
+                  <div className="rounded-xl bg-red-50 p-3 dark:bg-red-500/10">
                     <p className="text-xs font-semibold uppercase tracking-wide text-red-600">Now in use</p>
                     <p className="mt-1 text-sm font-medium text-ink">{currentBooking.title}</p>
                     <p className="text-sm text-bodytext">by {currentBooking.club.name}</p>
@@ -418,33 +416,6 @@ export default function MapPage() {
         </div>
       )}
 
-      {/* All rooms list */}
-      {rooms && rooms.length > 0 && (
-        <div className="card p-5">
-          <h2 className="mb-3 text-base font-bold text-ink">All rooms</h2>
-          <ul className="divide-y divide-slate-100">
-            {MAP_ROOMS.map((r) => {
-              const meta = rooms.find((x) => x.name === r.name);
-              return (
-                <li key={r.name}>
-                  <button
-                    onClick={() => setSelectedName(r.name)}
-                    className="flex w-full items-center justify-between gap-3 py-2.5 text-left"
-                  >
-                    <span>
-                      <span className="text-sm font-medium text-ink">{r.name}</span>
-                      <span className="ml-2 text-xs text-muted">
-                        {meta ? `${meta.capacity} seats` : "not registered"}
-                      </span>
-                    </span>
-                    <Badge text={bookedNames.has(r.name) ? "BOOKED" : "AVAILABLE"} />
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      )}
     </div>
   );
 }

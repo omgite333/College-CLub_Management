@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
-import { listBookings, listClassrooms, listClubs } from "../lib/api";
-import type { Booking, Classroom, ClubSummary } from "../types";
+import { listBookings, listClassrooms, listClubs, listEvents } from "../lib/api";
+import type { Booking, Classroom, ClubEvent, ClubSummary } from "../types";
 import { EmptyState, Spinner, clubHex, formatTime } from "../components/ui";
 
 const shortDate = (iso: string) =>
@@ -59,6 +59,7 @@ export default function DashboardPage() {
   const [clubs, setClubs] = useState<ClubSummary[] | null>(null);
   const [rooms, setRooms] = useState<Classroom[] | null>(null);
   const [bookings, setBookings] = useState<Booking[] | null>(null);
+  const [events, setEvents] = useState<ClubEvent[] | null>(null);
 
   useEffect(() => {
     const now = new Date();
@@ -75,9 +76,12 @@ export default function DashboardPage() {
     listBookings({ from: from.toISOString(), to: to.toISOString(), upcoming: false })
       .then(setBookings)
       .catch(() => setBookings([]));
+    listEvents()
+      .then(setEvents)
+      .catch(() => setEvents([]));
   }, []);
 
-  const loading = clubs === null || rooms === null || bookings === null;
+  const loading = clubs === null || rooms === null || bookings === null || events === null;
 
   const stats = useMemo(() => {
     if (!clubs || !rooms || !bookings) return null;
@@ -117,6 +121,15 @@ export default function DashboardPage() {
     [bookings]
   );
 
+  const upcomingEvents = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return (events ?? [])
+      .filter((e) => e.date && new Date(e.date) >= today)
+      .sort((a, b) => +new Date(a.date as string) - +new Date(b.date as string))
+      .slice(0, 5);
+  }, [events]);
+
   const firstName = user?.name?.split(" ")[0] ?? "there";
   // Booking rights come from holding a CLUB_ADMIN membership, not the account role.
   const canBook = user?.memberships.some((m) => m.role === "CLUB_ADMIN") === true;
@@ -139,7 +152,7 @@ export default function DashboardPage() {
             <StatCard label="Total classrooms" value={stats.rooms} />
             <Link
               to={canBook ? "/bookings?new=1" : "/clubs"}
-              className="flex flex-col items-center justify-center rounded-[20px] bg-ink p-5 text-white transition-transform hover:scale-[1.02]"
+              className="flex flex-col items-center justify-center rounded-[20px] bg-abyss p-5 text-white transition-transform hover:scale-[1.02]"
             >
               <span className="text-4xl font-bold leading-none">+</span>
               <span className="mt-2 text-sm font-semibold">{canBook ? "New Booking" : "Browse Clubs"}</span>
@@ -204,7 +217,43 @@ export default function DashboardPage() {
             </SectionCard>
           </div>
 
-          {/* Row 3: all bookings table */}
+          {/* Row 3: upcoming events */}
+          <SectionCard title="Upcoming events">
+            {upcomingEvents.length === 0 ? (
+              <EmptyState title="No upcoming events" />
+            ) : (
+              <ul className="space-y-3">
+                {upcomingEvents.map((e) => {
+                  const d = new Date(e.date as string);
+                  return (
+                    <li key={e.id} className="flex items-center gap-3">
+                      <div className="flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-xl bg-accent/10">
+                        <span className="text-base font-bold leading-none text-accent">{d.getDate()}</span>
+                        <span className="text-[10px] font-medium text-accent">
+                          {d.toLocaleDateString(undefined, { month: "short" })}
+                        </span>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-bold text-ink">{e.title}</p>
+                        <p className="truncate text-xs text-muted">
+                          {e.club?.name}
+                          {e.location ? ` · ${e.location}` : ""}
+                        </p>
+                      </div>
+                      <Link
+                        to={`/clubs/${e.clubId}`}
+                        className="shrink-0 text-sm font-semibold text-accent hover:underline"
+                      >
+                        View club ›
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </SectionCard>
+
+          {/* Row 4: all bookings table */}
           <SectionCard title="All bookings" linkTo="/bookings">
             {recent.length === 0 ? (
               <EmptyState title="No bookings yet" />
@@ -222,7 +271,7 @@ export default function DashboardPage() {
                   </thead>
                   <tbody>
                     {recent.map((b) => (
-                      <tr key={b.id} className="border-t border-slate-100">
+                      <tr key={b.id} className="border-t border-line">
                         <td className="py-2.5 pr-4 font-medium text-ink">{b.title}</td>
                         <td className="py-2.5 pr-4 text-bodytext">{b.club.name}</td>
                         <td className="py-2.5 pr-4 text-bodytext">{b.classroom.name}</td>

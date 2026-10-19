@@ -4,6 +4,7 @@ import type {
   Classroom,
   ClassroomDetail,
   ClubDetail,
+  ClubEvent,
   ClubSummary,
   Role,
   User,
@@ -123,6 +124,13 @@ export function addMember(clubId: string, payload: { email?: string; userId?: st
 }
 export function removeMember(clubId: string, membershipId: string) {
   return authed<{ ok: boolean }>(`/clubs/${clubId}/members/${membershipId}`, { method: "DELETE" });
+}
+
+// --- Events ---
+export async function listEvents(clubId?: string) {
+  const q = clubId ? `?clubId=${encodeURIComponent(clubId)}` : "";
+  const { events } = await authed<{ events: ClubEvent[] }>(`/events${q}`);
+  return events;
 }
 
 // --- Classrooms ---

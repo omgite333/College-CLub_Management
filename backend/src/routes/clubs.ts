@@ -78,11 +78,15 @@ router.get("/:id", requireAuth, async (req: Request, res: Response, next: NextFu
           },
           orderBy: { startTime: "asc" },
         },
+        members: {
+          select: { id: true, name: true, role: true },
+          orderBy: { name: "asc" },
+        },
       },
     });
     if (!club) throw createError(404, "Club not found");
 
-    const { memberships, bookings, ...clubData } = club;
+    const { memberships, bookings, members, ...clubData } = club;
     res.json({
       club: clubData,
       members: memberships.map((m) => ({
@@ -93,6 +97,7 @@ router.get("/:id", requireAuth, async (req: Request, res: Response, next: NextFu
         role: m.role,
         joinedAt: m.joinedAt,
       })),
+      memberNames: members,
       upcomingBookings: bookings,
     });
   } catch (err) {

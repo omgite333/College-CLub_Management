@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { listBookings, listClassrooms } from "../lib/api";
+import { listBookings, listClassrooms, listEvents } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
-import type { Booking, Classroom } from "../types";
+import type { Booking, Classroom, ClubEvent } from "../types";
 import { Alert, EmptyState, Field, Spinner, btnSecondary, clubHex, formatTime, inputClass } from "../components/ui";
 
 const dayKey = (d: Date) =>
@@ -29,6 +29,7 @@ export default function CalendarPage() {
   const [selectedKey, setSelectedKey] = useState(() => dayKey(new Date()));
   const [roomFilter, setRoomFilter] = useState("");
   const [bookings, setBookings] = useState<Booking[] | null>(null);
+  const [events, setEvents] = useState<ClubEvent[] | null>(null);
   const [classrooms, setClassrooms] = useState<Classroom[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,6 +39,9 @@ export default function CalendarPage() {
     listClassrooms()
       .then(setClassrooms)
       .catch(() => undefined);
+    listEvents()
+      .then(setEvents)
+      .catch(() => setEvents([]));
   }, []);
 
   useEffect(() => {
@@ -73,6 +77,19 @@ export default function CalendarPage() {
     [bookingsByDay, selectedKey]
   );
 
+  const eventsByDay = useMemo(() => {
+    const map = new Map<string, ClubEvent[]>();
+    for (const d of days) map.set(dayKey(d), []);
+    for (const e of events ?? []) {
+      if (!e.date) continue;
+      const key = dayKey(new Date(e.date));
+      if (map.has(key)) map.get(key)!.push(e);
+    }
+    return map;
+  }, [events, days]);
+
+  const selectedEvents = useMemo(() => eventsByDay.get(selectedKey) ?? [], [eventsByDay, selectedKey]);
+
   const shiftMonth = (delta: number) =>
     setViewDate((d) => new Date(d.getFullYear(), d.getMonth() + delta, 1));
 
@@ -87,8 +104,8 @@ export default function CalendarPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-ink">Booking Calendar</h1>
-          <p className="text-sm text-muted">Every booking, on a real calendar. Click a day for details.</p>
+          <h1 className="text-2xl font-bold text-ink">Calendar</h1>
+          <p className="text-sm text-muted">Bookings and club events, on a real calendar. Click a day for details.</p>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={() => shiftMonth(-1)} className={btnSecondary} aria-label="Previous month">
@@ -124,7 +141,7 @@ export default function CalendarPage() {
 
       {error && <Alert kind="error" message={error} />}
 
-      {bookings === null && !error ? (
+      {bookings === null || events === null ? (
         <Spinner />
       ) : (
         <div className="grid gap-4 xl:grid-cols-3">
@@ -140,9 +157,13 @@ export default function CalendarPage() {
               {days.map((d) => {
                 const key = dayKey(d);
                 const list = bookingsByDay.get(key) ?? [];
+                const evts = eventsByDay.get(key) ?? [];
                 const isToday = key === todayKey;
                 const isSelected = key === selectedKey;
                 const inMonth = d.getMonth() === viewDate.getMonth();
+                const shownBookings = list.slice(0, 3);
+                const shownEvents = evts.slice(0, Math.max(0, 3 - shownBookings.length));
+                const extra = list.length + evts.length - shownBookings.length - shownEvents.length;
                 return (
                   <button
                     key={key}
@@ -150,8 +171,8 @@ export default function CalendarPage() {
                     className={`min-h-20 rounded-xl border p-1.5 text-left align-top transition-colors sm:min-h-24 ${
                       isSelected
                         ? "border-accent ring-2 ring-accent/25"
-                        : "border-slate-100 hover:border-accent/40 hover:bg-accent/5"
-                    } ${inMonth ? "bg-white" : "bg-slate-50/60"}`}
+                        : "border-line hover:border-accent/40 hover:bg-accent/5"
+                    } ${inMonth ? "bg-surface" : "bg-canvas/60"}`}
                   >
                     <span
                       className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
@@ -161,7 +182,7 @@ export default function CalendarPage() {
                       {d.getDate()}
                     </span>
                     <div className="mt-1 space-y-1">
-                      {list.slice(0, 3).map((b) => (
+                      {shownBookings.map((b) => (
                         <div
                           key={b.id}
                           className="truncate rounded-md px-1 py-0.5 text-[11px] font-medium text-white"
@@ -171,8 +192,17 @@ export default function CalendarPage() {
                           {formatTime(b.startTime)} {b.classroom.name}
                         </div>
                       ))}
-                      {list.length > 3 && (
-                        <div className="px-1 text-[11px] font-medium text-muted">+{list.length - 3} more</div>
+                      {shownEvents.map((e) => (
+                        <div
+                          key={e.id}
+                          className="truncate rounded-md bg-plum/15 px-1 py-0.5 text-[11px] font-medium text-plum"
+                          title={`${e.club?.name ?? ""}: ${e.title}${e.location ? ` · ${e.location}` : ""}`}
+                        >
+                          {e.title}
+                        </div>
+                      ))}
+                      {extra > 0 && (
+                        <div className="px-1 text-[11px] font-medium text-muted">+{extra} more</div>
                       )}
                     </div>
                   </button>
@@ -189,6 +219,10 @@ export default function CalendarPage() {
                   </span>
                 )
               )}
+              <span className="flex items-center gap-1.5">
+                <span className="inline-block h-2.5 w-2.5 rounded bg-plum/40" />
+                Club event
+              </span>
             </div>
           </div>
 
@@ -202,27 +236,49 @@ export default function CalendarPage() {
               })}
             </h2>
             <p className="mb-3 text-sm text-muted">
-              {selectedBookings.length} booking{selectedBookings.length === 1 ? "" : "s"}
+              {selectedBookings.length} booking{selectedBookings.length === 1 ? "" : "s"} ·{" "}
+              {selectedEvents.length} event{selectedEvents.length === 1 ? "" : "s"}
             </p>
-            {selectedBookings.length === 0 ? (
-              <EmptyState title="No bookings" hint="Nothing scheduled for this day." />
+            {selectedBookings.length === 0 && selectedEvents.length === 0 ? (
+              <EmptyState title="Nothing scheduled" hint="No bookings or events for this day." />
             ) : (
-              <ul className="space-y-3">
-                {selectedBookings.map((b) => (
-                  <li key={b.id} className="rounded-xl border-l-4 bg-slate-50 p-3" style={{ borderColor: clubHex(b.club.id) }}>
-                    <p className="text-sm font-bold text-ink">
-                      {formatTime(b.startTime)} – {formatTime(b.endTime)}
-                    </p>
-                    <p className="text-sm font-medium text-bodytext">
-                      {b.classroom.name}
-                      <span className="ml-2 text-xs font-normal text-muted">{b.club.name}</span>
-                    </p>
-                    <p className="mt-0.5 text-sm text-bodytext">{b.title}</p>
-                    {b.purpose && <p className="text-xs text-muted">{b.purpose}</p>}
-                    {!isStudent && <p className="mt-1 text-xs text-muted">Booked by {b.bookedBy.name}</p>}
-                  </li>
-                ))}
-              </ul>
+              <div className="space-y-5">
+                {selectedBookings.length > 0 && (
+                  <ul className="space-y-3">
+                    {selectedBookings.map((b) => (
+                      <li key={b.id} className="rounded-xl border-l-4 bg-canvas p-3" style={{ borderColor: clubHex(b.club.id) }}>
+                        <p className="text-sm font-bold text-ink">
+                          {formatTime(b.startTime)} – {formatTime(b.endTime)}
+                        </p>
+                        <p className="text-sm font-medium text-bodytext">
+                          {b.classroom.name}
+                          <span className="ml-2 text-xs font-normal text-muted">{b.club.name}</span>
+                        </p>
+                        <p className="mt-0.5 text-sm text-bodytext">{b.title}</p>
+                        {b.purpose && <p className="text-xs text-muted">{b.purpose}</p>}
+                        {!isStudent && <p className="mt-1 text-xs text-muted">Booked by {b.bookedBy.name}</p>}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {selectedEvents.length > 0 && (
+                  <div>
+                    <h3 className="mb-2 text-sm font-bold text-ink">Club events</h3>
+                    <ul className="space-y-3">
+                      {selectedEvents.map((e) => (
+                        <li key={e.id} className="rounded-xl border-l-4 border-plum bg-canvas p-3">
+                          <p className="text-sm font-bold text-ink">{e.title}</p>
+                          <p className="text-sm text-bodytext">
+                            {e.club?.name}
+                            {e.location ? <span className="ml-2 text-xs text-muted">{e.location}</span> : null}
+                          </p>
+                          {e.schedule && <p className="text-xs text-muted">{e.schedule}</p>}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </div>

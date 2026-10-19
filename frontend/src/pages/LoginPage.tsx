@@ -50,8 +50,18 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen bg-canvas font-sans">
       {/* Brand panel */}
-      <div className="hidden w-[42%] flex-col justify-between bg-ink p-10 text-white lg:flex">
-        <span className="text-2xl font-bold tracking-tight">ClubHub</span>
+      <div className="hidden w-[42%] flex-col justify-between bg-abyss p-10 text-white lg:flex">
+        <span className="flex items-center gap-3">
+          <img
+            src="/wce-logo.png"
+            alt="Walchand College of Engineering"
+            className="h-11 w-11 rounded-xl bg-white object-contain p-1"
+          />
+          <span className="leading-tight">
+            <span className="block text-2xl font-bold tracking-tight">WCE CampusGrid</span>
+            <span className="block text-xs font-medium text-white/50">Walchand College of Engineering</span>
+          </span>
+        </span>
         <div>
           <h2 className="text-4xl font-bold leading-tight">
             Every club.
@@ -83,7 +93,14 @@ export default function LoginPage() {
       <div className="flex flex-1 items-center justify-center p-6">
         <div className="w-full max-w-md">
           <div className="mb-6 text-center lg:hidden">
-            <span className="text-2xl font-bold text-ink">ClubHub</span>
+            <span className="inline-flex items-center gap-2.5">
+              <img
+                src="/wce-logo.png"
+                alt="Walchand College of Engineering"
+                className="h-10 w-10 rounded-xl bg-white object-contain p-1 shadow-sm"
+              />
+              <span className="text-2xl font-bold text-ink">WCE CampusGrid</span>
+            </span>
           </div>
 
           <div className="card p-8">
@@ -104,7 +121,7 @@ export default function LoginPage() {
                     setError(null);
                   }}
                   className={`rounded-full py-2 text-sm font-semibold ${
-                    tab === t ? "bg-white text-ink shadow-sm" : "text-muted hover:text-bodytext"
+                    tab === t ? "bg-surface text-ink shadow-sm" : "text-muted hover:text-bodytext"
                   }`}
                 >
                   {t === "login" ? "Login" : "Register"}

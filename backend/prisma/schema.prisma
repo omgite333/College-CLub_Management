@@ -42,6 +42,8 @@ model Club {
   createdAt   DateTime     @default(now())
   memberships Membership[]
   bookings    Booking[]
+  events      Event[]
+  members     ClubMember[]
 }
 
 model Membership {
@@ -85,4 +87,30 @@ model Booking {
   bookedBy    User          @relation("BookedBy", fields: [bookedById], references: [id])
 
   @@index([classroomId, startTime, endTime])
+}
+
+model Event {
+  id        String    @id @default(cuid())
+  clubId    String
+  title     String
+  schedule  String?
+  date      DateTime?
+  location  String?
+  createdAt DateTime  @default(now())
+  club      Club      @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  @@index([clubId])
+}
+
+// Display-only club representatives (from the clubs spreadsheet).
+// These are NOT login accounts - just names shown on the club page.
+model ClubMember {
+  id        String   @id @default(cuid())
+  clubId    String
+  name      String
+  role      String?
+  createdAt DateTime @default(now())
+  club      Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  @@index([clubId])
 }

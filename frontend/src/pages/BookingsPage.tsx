@@ -220,7 +220,7 @@ export default function BookingsPage() {
               type="checkbox"
               checked={showUpcomingOnly}
               onChange={(e) => setShowUpcomingOnly(e.target.checked)}
-              className="h-4 w-4 rounded border-slate-300 accent-accent"
+              className="h-4 w-4 rounded border-line accent-accent"
             />
             Upcoming only
           </label>

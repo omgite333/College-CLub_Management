@@ -9,7 +9,7 @@ export default function ProtectedRoute({ children, roles }: { children: ReactNod
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+      <div className="flex min-h-screen items-center justify-center bg-canvas">
         <Spinner />
       </div>
     );
@@ -19,8 +19,8 @@ export default function ProtectedRoute({ children, roles }: { children: ReactNod
 
   if (roles && !roles.includes(user.role)) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
-        <div className="rounded-xl bg-white p-8 text-center shadow">
+      <div className="flex min-h-screen items-center justify-center bg-canvas px-4">
+        <div className="rounded-xl bg-surface p-8 text-center shadow">
           <h1 className="text-lg font-semibold text-slate-900">Not authorized</h1>
           <p className="mt-2 text-sm text-slate-500">Your role does not have access to this page.</p>
           <a href="/" className="mt-4 inline-block text-sm font-medium text-indigo-600 hover:text-indigo-500">

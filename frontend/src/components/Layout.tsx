@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import ThemeToggle from "./ThemeToggle";
 
 // Thin 1.5px line icons (24x24, stroke=currentColor)
 function Icon({ d, children }: { d?: string; children?: React.ReactNode }) {
@@ -80,7 +81,17 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <div className="flex h-full flex-col">
       <div className="px-2 pb-8 pt-2">
-        <span className="text-xl font-bold tracking-tight text-white">ClubHub</span>
+        <span className="flex items-center gap-3">
+          <img
+            src="/wce-logo.png"
+            alt="Walchand College of Engineering"
+            className="h-10 w-10 rounded-xl bg-white object-contain p-1"
+          />
+          <span className="leading-tight">
+            <span className="block text-lg font-bold tracking-tight text-white">WCE CampusGrid</span>
+            <span className="block text-[11px] font-medium text-white/50">Walchand College of Engineering</span>
+          </span>
+        </span>
       </div>
 
       <nav className="flex-1 space-y-1">
@@ -134,15 +145,15 @@ export default function Layout() {
   return (
     <div className="min-h-screen bg-canvas font-sans text-bodytext">
       {/* Desktop floating sidebar */}
-      <aside className="fixed bottom-4 left-4 top-4 z-40 hidden w-60 rounded-[20px] bg-ink p-5 lg:block">
+      <aside className="fixed bottom-4 left-4 top-4 z-40 hidden w-60 rounded-[20px] bg-abyss p-5 lg:block">
         <SidebarContent />
       </aside>
 
       {/* Mobile slide-over */}
       {menuOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <button aria-label="Close menu" className="absolute inset-0 bg-ink/40" onClick={() => setMenuOpen(false)} />
-          <aside className="absolute bottom-4 left-4 top-4 w-64 rounded-[20px] bg-ink p-5">
+          <button aria-label="Close menu" className="absolute inset-0 bg-abyss/60" onClick={() => setMenuOpen(false)} />
+          <aside className="absolute bottom-4 left-4 top-4 w-64 rounded-[20px] bg-abyss p-5">
             <SidebarContent onNavigate={() => setMenuOpen(false)} />
           </aside>
         </div>
@@ -153,7 +164,7 @@ export default function Layout() {
         <header className="sticky top-0 z-30 bg-canvas/90 backdrop-blur">
           <div className="flex items-center gap-3 px-4 pb-3 pt-4 sm:px-8">
             <button
-              className="rounded-xl bg-white p-2.5 text-bodytext shadow-sm lg:hidden"
+              className="rounded-xl bg-surface p-2.5 text-bodytext shadow-sm lg:hidden"
               onClick={() => setMenuOpen(true)}
               aria-label="Open menu"
             >
@@ -163,7 +174,7 @@ export default function Layout() {
             <p className="hidden text-base font-bold text-ink md:block">{today}</p>
 
             <div className="mx-auto w-full max-w-xl flex-1">
-              <div className="flex items-center gap-2 rounded-full bg-white px-5 py-2.5 shadow-sm">
+              <div className="flex items-center gap-2 rounded-full bg-surface px-5 py-2.5 shadow-sm">
                 <span className="text-muted">
                   <Icon>
                     <circle cx="11" cy="11" r="7" />
@@ -177,10 +188,12 @@ export default function Layout() {
               </div>
             </div>
 
+            <ThemeToggle />
+
             <button
               type="button"
               aria-label="Notifications"
-              className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-bodytext shadow-sm"
+              className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface text-bodytext shadow-sm"
             >
               <Icon>
                 <path d="M6 9a6 6 0 1 1 12 0c0 5 2 6 2 6H4s2-1 2-6" />
@@ -197,7 +210,7 @@ export default function Layout() {
               onClick={onLogout}
               aria-label="Logout"
               title="Logout"
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-bodytext shadow-sm hover:text-accent"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface text-bodytext shadow-sm hover:text-accent"
             >
               <Icon>
                 <path d="M14 4H6a1.5 1.5 0 0 0-1.5 1.5v13A1.5 1.5 0 0 0 6 20h8" />
